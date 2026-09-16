@@ -1,0 +1,40 @@
+# Kör applikationen och MariaDB tillsammans. Används lokalt och som Compose-tjänst i Dokploy.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:mariadb://db:3306/minaarenden
+      DB_USER: minaarenden
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD måste sättas}
+      MINA_ARENDEN_PRODUCENT: ${MINA_ARENDEN_PRODUCENT:-Referenskommunen}
+      MINA_ARENDEN_PREFIX: ${MINA_ARENDEN_PREFIX:-REFKOM}
+      MINA_ARENDEN_STANDARD_VERSION: ${MINA_ARENDEN_STANDARD_VERSION:-6.1}
+      MINA_ARENDEN_SEED: ${MINA_ARENDEN_SEED:-true}
+      CLIENT_ID: ${CLIENT_ID:-}
+      CLIENT_SECRET: ${CLIENT_SECRET:-}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: minaarenden
+      MARIADB_USER: minaarenden
+      MARIADB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD måste sättas}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-${DB_PASSWORD}}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mariadb-data:

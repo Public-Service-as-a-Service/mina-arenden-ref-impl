@@ -1,0 +1,59 @@
+[
+  {
+    "kundhandelseId": "REFKOM-BYGG-2026-00123-1",
+    "part": { "kund": { "identifierare": "199009090000", "typ": "Personnummer" }, "arende": { "identifierare": "BYGG-2026-00123", "typ": "Diarienummer" } },
+    "rubrik": "Ansökan om bygglov mottagen",
+    "beskrivning": "Vi har tagit emot din ansökan om bygglov för garage på fastigheten Exempel 1:1. Handläggningen påbörjas inom två veckor.",
+    "tidpunkt": "2026-08-20T09:12:00+02:00",
+    "kundhandelseTyp": "REFKOM.BYGGLOV.ANSOKAN_MOTTAGEN",
+    "producentarendetKraverKundatgard": false,
+    "producentarendetKlart": false,
+    "taggar": ["bygglov"],
+    "referenser": { "diarienummer": "BYGG-2026-00123", "lank": "https://www.exempelkommun.se/minasidor/arenden/BYGG-2026-00123" }
+  },
+  {
+    "kundhandelseId": "REFKOM-BYGG-2026-00123-2",
+    "part": { "kund": { "identifierare": "199009090000", "typ": "Personnummer" }, "arende": { "identifierare": "BYGG-2026-00123", "typ": "Diarienummer" } },
+    "rubrik": "Ansökan behöver kompletteras",
+    "beskrivning": "Situationsplan saknas. Komplettera ansökan senast 2026-09-30, annars kan ärendet avvisas.",
+    "tidpunkt": "2026-09-02T14:30:00+02:00",
+    "kundhandelseTyp": "REFKOM.BYGGLOV.KOMPLETTERING_BEGARD",
+    "producentarendetKraverKundatgard": true,
+    "producentarendetKlart": false,
+    "taggar": ["bygglov", "kundatgard"],
+    "utokadInformation": { "senastDatum": "2026-09-30", "saknadeHandlingar": ["Situationsplan"] }
+  },
+  {
+    "kundhandelseId": "REFKOM-SERV-2026-00042-1",
+    "part": { "kund": { "identifierare": "165560001234", "typ": "Organisationsnummer" }, "arende": { "identifierare": "SERV-2026-00042", "typ": "Diarienummer" } },
+    "rubrik": "Ansökan om serveringstillstånd mottagen",
+    "beskrivning": "Vi har tagit emot ansökan om stadigvarande serveringstillstånd för Restaurang Exempel.",
+    "tidpunkt": "2026-09-05T11:00:00+02:00",
+    "kundhandelseTyp": "REFKOM.SERVERINGSTILLSTAND.ANSOKAN_MOTTAGEN",
+    "producentarendetKraverKundatgard": false,
+    "producentarendetKlart": false,
+    "taggar": ["foretag", "serveringstillstand"]
+  },
+  {
+    "kundhandelseId": "REFKOM-SERV-2026-00042-2",
+    "part": { "kund": { "identifierare": "165560001234", "typ": "Organisationsnummer" }, "arende": { "identifierare": "SERV-2026-00042", "typ": "Diarienummer" } },
+    "rubrik": "Beslut om serveringstillstånd",
+    "beskrivning": "Kommunen har beviljat stadigvarande serveringstillstånd. Beslutet finns att läsa på Mina sidor.",
+    "tidpunkt": "2026-09-14T08:45:00+02:00",
+    "kundhandelseTyp": "REFKOM.SERVERINGSTILLSTAND.BESLUT",
+    "producentarendetKraverKundatgard": false,
+    "producentarendetKlart": true,
+    "taggar": ["foretag", "serveringstillstand"]
+  },
+  {
+    "kundhandelseId": "REFKOM-FSK-2026-00777-1",
+    "part": { "kund": { "identifierare": "199009090000", "typ": "Personnummer" } },
+    "rubrik": "Plats i förskola erbjuden",
+    "beskrivning": "Ditt barn har erbjudits plats på Exempelgatans förskola från 2026-10-01. Svara på erbjudandet inom 14 dagar.",
+    "tidpunkt": "2026-09-10T07:30:00+02:00",
+    "kundhandelseTyp": "REFKOM.FORSKOLA.PLATS_ERBJUDEN",
+    "producentarendetKraverKundatgard": true,
+    "producentarendetKlart": false,
+    "taggar": ["forskola", "kundatgard"]
+  }
+]
