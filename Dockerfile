@@ -1,4 +1,5 @@
-# Steg 1: bygg med Gradle (wrapper i repot hämtar rätt Gradle-version)
+# Steg 1: bygg med Gradle (wrapper i repot hämtar rätt Gradle-version).
+# Testerna körs inte här utan i CI (.github/workflows/ci.yml), där bilden bara byggs efter godkända tester.
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /src
 COPY gradlew build.gradle settings.gradle ./
@@ -11,7 +12,11 @@ RUN ./gradlew --no-daemon clean bootJar -x test
 FROM eclipse-temurin:21-jre
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75"
 WORKDIR /app
-RUN useradd --system --uid 1001 app
+# curl installeras uttryckligen för hälsokontrollen, så att den inte beror på vad basbilden råkar innehålla.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --system --uid 1001 app
 COPY --from=build /src/build/libs/app.jar /app/app.jar
 USER app
 EXPOSE 8080

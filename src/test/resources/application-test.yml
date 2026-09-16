@@ -1,3 +1,4 @@
+# Aktiveras med profilen test (@ActiveProfiles("test")). Kompletterar application.yml i stället för att skugga den.
 spring:
   datasource:
     url: jdbc:h2:mem:minaarenden;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1

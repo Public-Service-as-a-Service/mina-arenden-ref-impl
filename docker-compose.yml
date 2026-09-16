@@ -12,10 +12,14 @@ services:
       MINA_ARENDEN_PRODUCENT: ${MINA_ARENDEN_PRODUCENT:-Referenskommunen}
       MINA_ARENDEN_PREFIX: ${MINA_ARENDEN_PREFIX:-REFKOM}
       MINA_ARENDEN_STANDARD_VERSION: ${MINA_ARENDEN_STANDARD_VERSION:-6.1}
+      # Exempeldata läses in vid första start (demo). Profilen production stänger av det.
       MINA_ARENDEN_SEED: ${MINA_ARENDEN_SEED:-true}
+      # Tomma som standard = öppna gränssnitt, avsett för lokal test. Sätt SPRING_PROFILES_ACTIVE=production
+      # (eller MINA_ARENDEN_KRAV_AUTENTISERING=true) så vägrar tjänsten starta utan alla tre nycklar.
       CLIENT_ID: ${CLIENT_ID:-}
       CLIENT_SECRET: ${CLIENT_SECRET:-}
       ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     depends_on:
       db:
         condition: service_healthy

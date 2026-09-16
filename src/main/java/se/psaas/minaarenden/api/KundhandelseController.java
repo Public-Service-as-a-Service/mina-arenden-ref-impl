@@ -1,8 +1,11 @@
 package se.psaas.minaarenden.api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -14,11 +17,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import se.psaas.minaarenden.api.dto.Kundhandelse;
+import se.psaas.minaarenden.api.dto.CachadKundhandelse;
+import se.psaas.minaarenden.api.dto.Granser;
 import se.psaas.minaarenden.api.dto.NyKundhandelse;
-import se.psaas.minaarenden.api.dto.Part;
-import se.psaas.minaarenden.domain.KundhandelseEntity;
-import se.psaas.minaarenden.service.KundhandelseMapper;
+import se.psaas.minaarenden.config.OpenApiConfig;
 import se.psaas.minaarenden.service.KundhandelseService;
 
 /**
@@ -27,32 +29,34 @@ import se.psaas.minaarenden.service.KundhandelseService;
  */
 @RestController
 @Tag(name = "Ärendecache", description = "Läs in, hämta och ta bort kundhändelser i cachen")
+@SecurityRequirement(name = OpenApiConfig.API_KEY)
 public class KundhandelseController {
 
     private final KundhandelseService service;
-    private final KundhandelseMapper mapper;
 
-    public KundhandelseController(KundhandelseService service, KundhandelseMapper mapper) {
+    public KundhandelseController(KundhandelseService service) {
         this.service = service;
-        this.mapper = mapper;
     }
 
     public record Sparad(int antal) {}
 
-    public record CachadKundhandelse(Part part, Kundhandelse kundhandelse, List<String> taggar) {}
-
-    @Operation(summary = "Lägg till eller ersätt kundhändelser", description = "Skicka en lista. Befintlig kundhändelse med samma kundhandelseId ersätts.")
+    @Operation(summary = "Lägg till eller ersätt kundhändelser",
+            description = "Skicka en lista med högst " + Granser.MAX_INLASNING + " kundhändelser. Befintlig kundhändelse med samma kundhandelseId ersätts. "
+                    + "Listan sparas i en transaktion; vid 409 (samtidig inläsning av samma nya kundhandelseId) kan anropet skickas om oförändrat.")
     @PostMapping(value = "/kundhandelser", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public Sparad spara(@RequestBody List<@Valid NyKundhandelse> nya) {
+    public Sparad spara(
+            @RequestBody
+            @NotEmpty(message = "listan får inte vara tom")
+            @Size(max = Granser.MAX_INLASNING, message = "högst " + Granser.MAX_INLASNING + " kundhändelser per anrop")
+            List<@Valid NyKundhandelse> nya) {
         return new Sparad(service.spara(nya));
     }
 
     @Operation(summary = "Hämta en kundhändelse ur cachen")
     @GetMapping(value = "/kundhandelser/{kundhandelseId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public CachadKundhandelse hamta(@PathVariable String kundhandelseId) {
-        KundhandelseEntity e = service.hamta(kundhandelseId);
-        return new CachadKundhandelse(mapper.partOf(e), mapper.toDto(e), List.copyOf(e.getTaggar()));
+        return service.hamta(kundhandelseId);
     }
 
     @Operation(summary = "Ta bort en kundhändelse ur cachen")

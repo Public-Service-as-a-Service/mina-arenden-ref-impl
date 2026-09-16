@@ -27,6 +27,11 @@ management:
       probes:
         enabled: true
 
+logging:
+  # skv_client_correlation_id (MDC-nyckeln correlationId) på varje loggrad som hör till ett anrop.
+  pattern:
+    level: "%5p [%X{correlationId:-}]"
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -42,9 +47,23 @@ minaarenden:
   # Version av Mina ärendens standard som producenten implementerar.
   standard-version: ${MINA_ARENDEN_STANDARD_VERSION:6.1}
   # Om satta krävs matchande headrar client_id och client_secret på /kundhandelseFragaSynkron.
+  # Måste sättas i par: bara den ena stoppar starten (fail-closed).
   client-id: ${CLIENT_ID:}
   client-secret: ${CLIENT_SECRET:}
   # Om satt krävs headern X-Api-Key på /kundhandelser (inläsning till cachen).
   admin-api-key: ${ADMIN_API_KEY:}
-  # Läs in exempelhändelser vid start om cachen är tom.
+  # true: applikationen vägrar starta om någon av nycklarna ovan saknas. Sätts av profilen production.
+  krav-autentisering: ${MINA_ARENDEN_KRAV_AUTENTISERING:false}
+  # Läs in exempelhändelser vid start om cachen är tom (endast utveckling/demo).
   seed: ${MINA_ARENDEN_SEED:false}
+
+---
+# Profilen production (SPRING_PROFILES_ACTIVE=production): autentisering obligatorisk, ingen exempeldata.
+spring:
+  config:
+    activate:
+      on-profile: production
+
+minaarenden:
+  krav-autentisering: true
+  seed: false

@@ -12,10 +12,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 @TestPropertySource(properties = {"minaarenden.client-id=konsument", "minaarenden.client-secret=hemligt", "minaarenden.admin-api-key=adminnyckel"})
 class ApiKeyFilterTest {
 

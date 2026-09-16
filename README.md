@@ -43,11 +43,15 @@ export MINA_ARENDEN_SEED=true
 ./gradlew bootRun
 ```
 
-Tester (H2 i MariaDB-läge, ingen databas behövs):
+Tester:
 
 ```bash
 ./gradlew test
 ```
+
+API-testerna körs mot H2 i MariaDB-läge (ingen databas behövs) och dessutom mot riktig MariaDB via
+Testcontainers om Docker finns på maskinen; utan Docker hoppas MariaDB-körningen över. I CI
+(`.github/workflows/ci.yml`) körs båda, och containerbilden byggs bara om testerna går igenom.
 
 Med `MINA_ARENDEN_SEED=true` läses fem exempelhändelser in vid första start
 (`src/main/resources/exempel-kundhandelser.json`), så att frågor kan provas direkt.
@@ -88,10 +92,17 @@ Regler som implementeras:
 | `startDatum`, `slutDatum` | Inklusive, kl. 00:00 till 23:59:59.999 svensk tid |
 | `behandling.sortering` | Flera attribut i prioritetsordning; utan sortering nyast först |
 | `behandling.paginering` | Kräver sortering; `totaltAntalKundhandelser` anger antal före paginering |
-| Fel | `{"message": "..."}` med 400, 401, 404, 405, 415 eller 500 |
+| Fel | `{"message": "..."}` med 400, 401, 404, 405, 409, 415 eller 500 |
 
-Obligatorisk header: `skv_client_correlation_id`. Om `CLIENT_ID` och `CLIENT_SECRET` är satta
-krävs även headrarna `client_id` och `client_secret` (enkel ersättning för OAuth 2 i test).
+Obligatorisk header: `skv_client_correlation_id` (icke-tom sträng med skrivbara tecken, högst 200;
+API-definitionen tillåter valfritt format, tjänstebeskrivningen rekommenderar UUID). Värdet läggs i
+MDC som `correlationId` och skrivs på varje loggrad som hör till anropet. Om `CLIENT_ID` och
+`CLIENT_SECRET` är satta krävs även headrarna `client_id` och `client_secret` (enkel ersättning för
+OAuth 2 i test).
+
+Gränser per anrop (`Granser.java`): högst 100 parter, 100 kundhändelsetyper, 100 taggar och
+`paginering.limit` högst 1000. Överskridna gränser ger 400. Utan paginering returneras alla träffar,
+som standarden kräver.
 
 ### Läsa in kundhändelser i cachen
 
@@ -112,9 +123,13 @@ curl -s http://localhost:8080/kundhandelser -H 'Content-Type: application/json' 
 ```
 
 `producent`, `sprak` (`sv`) och `version` fylls i från konfigurationen om de utelämnas.
-`tidpunkt` tas emot som RFC 3339 eller lokal tid `ÅÅÅÅ-MM-DD HH:MM:SS` och lämnas alltid ut som
-RFC 3339 med svensk tidszon. Även `GET /kundhandelser/{id}`, `DELETE /kundhandelser/{id}` och
-`GET /kundhandelser` (antal). Skyddas med headern `X-Api-Key` om `ADMIN_API_KEY` är satt.
+`kundhandelseTyp` ska ha minst tre delar och börja med det konfigurerade prefixet; fältlängder
+valideras mot databaskolumnerna så att fel ger 400 med fältnamn. Högst 1000 händelser per anrop,
+som sparas i en transaktion. `tidpunkt` tas emot som RFC 3339 eller lokal tid `ÅÅÅÅ-MM-DD HH:MM:SS`
+och lämnas alltid ut som RFC 3339 med svensk tidszon. Även `GET /kundhandelser/{id}`,
+`DELETE /kundhandelser/{id}` och `GET /kundhandelser` (antal). Skyddas med headern `X-Api-Key` om
+`ADMIN_API_KEY` är satt. Om två anrop samtidigt skapar samma nya `kundhandelseId` vinner det unika
+databasvillkoret; det andra får 409 och kan skickas om oförändrat.
 
 ## Datamodell
 
@@ -142,10 +157,16 @@ till en ny migration, inte genom att ändra `V1`.
 | `MINA_ARENDEN_PRODUCENT` | `Referenskommunen` | Producentens namn i svaren |
 | `MINA_ARENDEN_PREFIX` | `REFKOM` | Producentprefix i kundhändelsetyper |
 | `MINA_ARENDEN_STANDARD_VERSION` | `6.1` | Standardversion som anges i `version` |
-| `MINA_ARENDEN_SEED` | `false` | Läs in exempelhändelser om cachen är tom |
-| `CLIENT_ID`, `CLIENT_SECRET` | tomma | Krävs som headrar på frågan om satta |
+| `MINA_ARENDEN_SEED` | `false` | Läs in exempelhändelser om cachen är tom (endast utveckling/demo) |
+| `CLIENT_ID`, `CLIENT_SECRET` | tomma | Krävs som headrar på frågan om satta. Måste sättas i par, annars startar inte tjänsten |
 | `ADMIN_API_KEY` | tom | Krävs som `X-Api-Key` på `/kundhandelser` om satt |
+| `MINA_ARENDEN_KRAV_AUTENTISERING` | `false` | `true`: vägra starta om någon av nycklarna ovan saknas |
+| `SPRING_PROFILES_ACTIVE` | tom | `production` sätter `MINA_ARENDEN_KRAV_AUTENTISERING=true` och `MINA_ARENDEN_SEED=false` |
 | `PORT` | `8080` | Lyssningsport |
+
+Säkerhetskonfigurationen är fail-closed: utan nycklar startar tjänsten men loggar en varning per
+öppet gränssnitt, en halv konfiguration stoppar starten, och med profilen `production` är alla
+tre nycklarna obligatoriska. Personnummer (`anvandare`) loggas aldrig, inte heller delvis.
 
 ## Deploy i Dokploy
 
@@ -153,8 +174,9 @@ Enklast som **Compose-tjänst**, då följer MariaDB med:
 
 1. **Create Service → Compose**. Provider GitHub, repot `Public-Service-as-a-Service/mina-arenden-ref-impl`,
    branch `main`, Compose Path `docker-compose.yml`.
-2. Fliken **Environment**: sätt minst `DB_PASSWORD` (t.ex. `openssl rand -hex 16`). Sätt gärna
-   `MINA_ARENDEN_PRODUCENT`, `MINA_ARENDEN_PREFIX`, `CLIENT_ID`, `CLIENT_SECRET` och `ADMIN_API_KEY`.
+2. Fliken **Environment**: sätt minst `DB_PASSWORD` (t.ex. `openssl rand -hex 16`). Sätt
+   `MINA_ARENDEN_PRODUCENT`, `MINA_ARENDEN_PREFIX`, `CLIENT_ID`, `CLIENT_SECRET`, `ADMIN_API_KEY`
+   och `SPRING_PROFILES_ACTIVE=production` för allt som inte är en ren testmiljö.
 3. Fliken **Domains**: lägg till domän för tjänsten `app`, container port `8080`, HTTPS på.
 4. **Deploy**. Databasen ligger i volymen `mariadb-data` och överlever redeploy.
 
@@ -166,8 +188,13 @@ mot en MariaDB-tjänst i Dokploy och sätt `DB_USER`/`DB_PASSWORD`. Hälsokontro
 
 - Ingen OAuth 2. Skatteverkets vidareförmedlingstjänst autentiserar sig mot producenter enligt
   anslutningsvillkoren; referensimplementationen har en enkel header-kontroll som platshållare.
-- Sortering och paginering görs i minnet per part efter databasfrågan, vilket räcker för en
-  kommuns volymer men bör flyttas till SQL om cachen blir stor.
+- Filtrering, sortering och paginering görs i databasen (`KundhandelseSpecifications`); bara den
+  begärda sidan läses in. Textattribut sorteras skiftlägesokänsligt med `LOWER()`, tidpunkt på den
+  lagrade `DATETIME`-kolumnen och primärnyckeln används som sista sorteringskriterium så att
+  paginering är stabil.
+- Felsvar följer API-definitionens schema `{"message": "..."}` (inga andra fält tillåts), därför
+  inte RFC 9457 Problem Details. Meddelandena pekar ut fält men innehåller inte tekniska detaljer
+  från underliggande undantag.
 - Auktorisation av slutanvändaren (`anvandare`) görs inte; producenten ansvarar för detta i
   skarp drift.
 - Endast den synkrona frågan implementeras. Standardens övriga delar (till exempel
