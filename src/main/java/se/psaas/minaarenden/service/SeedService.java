@@ -14,11 +14,17 @@ import org.springframework.stereotype.Component;
 import se.psaas.minaarenden.api.dto.NyKundhandelse;
 import se.psaas.minaarenden.config.MinaArendenProperties;
 
-/** Läser in exempelhändelser vid start om MINA_ARENDEN_SEED=true och cachen är tom. */
+/**
+ * Läser in exempelhändelser vid start om MINA_ARENDEN_SEED=true och cachen är tom. Avsett för
+ * utveckling och demonstration; profilen production stänger av det.
+ */
 @Component
 public class SeedService implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(SeedService.class);
+
+    /** Prefix som exempelfilen är skriven med; byts mot konfigurerat prefix vid inläsning. */
+    static final String EXEMPEL_PREFIX = "REFKOM";
 
     private final MinaArendenProperties properties;
     private final KundhandelseService service;
@@ -40,10 +46,32 @@ public class SeedService implements ApplicationRunner {
             return;
         }
         try (InputStream in = new ClassPathResource("exempel-kundhandelser.json").getInputStream()) {
-            String json = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).replace("REFKOM", properties.prefix());
-            List<NyKundhandelse> nya = objectMapper.readValue(json, new TypeReference<>() {});
+            List<NyKundhandelse> exempel = objectMapper.readValue(in, new TypeReference<>() {});
+            List<NyKundhandelse> nya = exempel.stream().map(n -> medPrefix(n, properties.prefix())).toList();
             int antal = service.spara(nya);
             log.info("Läste in {} exempelhändelser för producenten {}", antal, properties.producent());
         }
+    }
+
+    /** Byter producentprefix i de fält där det förekommer (kundhandelseId och kundhandelseTyp), inget annat. */
+    public static NyKundhandelse medPrefix(NyKundhandelse n, String prefix) {
+        return new NyKundhandelse(
+                bytPrefix(n.kundhandelseId(), EXEMPEL_PREFIX + "-", prefix + "-"),
+                n.part(),
+                n.rubrik(),
+                n.beskrivning(),
+                n.sprak(),
+                n.tidpunkt(),
+                bytPrefix(n.kundhandelseTyp(), EXEMPEL_PREFIX + ".", prefix + "."),
+                n.producentarendetKraverKundatgard(),
+                n.producentarendetKlart(),
+                n.version(),
+                n.utokadInformation(),
+                n.referenser(),
+                n.taggar());
+    }
+
+    private static String bytPrefix(String varde, String fran, String till) {
+        return varde != null && varde.startsWith(fran) ? till + varde.substring(fran.length()) : varde;
     }
 }

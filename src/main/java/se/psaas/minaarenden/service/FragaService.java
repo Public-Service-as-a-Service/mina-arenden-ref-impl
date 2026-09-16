@@ -1,8 +1,8 @@
 package se.psaas.minaarenden.service;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,19 +11,23 @@ import se.psaas.minaarenden.api.dto.Delfraga;
 import se.psaas.minaarenden.api.dto.Fraga;
 import se.psaas.minaarenden.api.dto.FragaRequest;
 import se.psaas.minaarenden.api.dto.FragaResponse;
-import se.psaas.minaarenden.api.dto.Kundhandelse;
 import se.psaas.minaarenden.api.dto.KundhandelserForPart;
 import se.psaas.minaarenden.api.dto.Metadata;
+import se.psaas.minaarenden.api.dto.Paginering;
 import se.psaas.minaarenden.api.dto.Part;
 import se.psaas.minaarenden.api.dto.Sortering;
 import se.psaas.minaarenden.config.MinaArendenProperties;
 import se.psaas.minaarenden.domain.KundhandelseEntity;
 import se.psaas.minaarenden.domain.KundhandelseRepository;
 import se.psaas.minaarenden.domain.KundhandelseSpecifications;
+import se.psaas.minaarenden.domain.OffsetPageable;
 
 /**
  * Besvarar en synkron fråga ur ärendecachen. Som ensam producent svarar tjänsten alltid med 200 och
  * en delfråga per part med status OK; vidareförmedlingstjänsten sätter 206 om någon producent fallerar.
+ *
+ * <p>Filtrering, sortering och paginering görs i databasen. Bara den begärda sidan läses in i minnet;
+ * totaltAntalKundhandelser hämtas med en separat COUNT-fråga när det behövs.
  */
 @Service
 public class FragaService {
@@ -42,6 +46,9 @@ public class FragaService {
     public FragaResponse besvara(FragaRequest request, String onskatSprak) {
         Fraga fraga = request.fraga();
         validera(fraga);
+        Behandling behandling = fraga.behandling();
+        List<Sortering> sortering = behandling == null ? null : behandling.sortering();
+        Paginering paginering = behandling == null ? null : behandling.paginering();
 
         List<KundhandelserForPart> perPart = new ArrayList<>();
         List<Delfraga> delfragor = new ArrayList<>();
@@ -50,10 +57,22 @@ public class FragaService {
                     .and(KundhandelseSpecifications.kundhandelseTyper(fraga.kundhandelseTyper()))
                     .and(KundhandelseSpecifications.taggar(fraga.taggar()))
                     .and(KundhandelseSpecifications.tidpunktFrom(Tidpunkt.dagStart(fraga.startDatum())))
-                    .and(KundhandelseSpecifications.tidpunktTo(Tidpunkt.dagSlut(fraga.slutDatum())));
-            List<Kundhandelse> alla = repository.findAll(spec).stream().map(mapper::toDto).toList();
-            List<Kundhandelse> behandlade = behandla(alla, fraga.behandling());
-            perPart.add(new KundhandelserForPart(part, alla.size(), behandlade));
+                    .and(KundhandelseSpecifications.tidpunktTo(Tidpunkt.dagSlut(fraga.slutDatum())))
+                    .and(KundhandelseSpecifications.sorterad(sortering));
+
+            List<KundhandelseEntity> traffar;
+            long totalt;
+            if (paginering == null) {
+                traffar = repository.findAll(spec);
+                totalt = traffar.size();
+            } else {
+                // Utan limit ska alla kundhändelser från offset till slutet lämnas (spec).
+                int limit = paginering.limit() == null ? Integer.MAX_VALUE : paginering.limit();
+                Page<KundhandelseEntity> sida = repository.findAll(spec, new OffsetPageable(paginering.offset(), limit));
+                traffar = sida.getContent();
+                totalt = sida.getTotalElements();
+            }
+            perPart.add(new KundhandelserForPart(part, totalt, traffar.stream().map(mapper::toDto).toList()));
             delfragor.add(new Delfraga(properties.producent(), part, "OK", null, 200));
         }
 
@@ -75,43 +94,5 @@ public class FragaService {
         if (fraga.startDatum() != null && fraga.slutDatum() != null && fraga.startDatum().compareTo(fraga.slutDatum()) > 0) {
             throw new OgiltigFragaException("startDatum får inte vara efter slutDatum");
         }
-    }
-
-    /** Sortering och paginering sker hos producenten på samma sätt som i vidareförmedlingstjänsten. */
-    static List<Kundhandelse> behandla(List<Kundhandelse> alla, Behandling behandling) {
-        if (behandling == null) {
-            return alla.stream().sorted(Comparator.comparing(Kundhandelse::tidpunkt).reversed()).toList();
-        }
-        List<Kundhandelse> list = new ArrayList<>(alla);
-        if (behandling.sortering() != null && !behandling.sortering().isEmpty()) {
-            Comparator<Kundhandelse> cmp = null;
-            for (Sortering s : behandling.sortering()) {
-                Comparator<Kundhandelse> c = comparator(s.attribut());
-                if (!Boolean.TRUE.equals(s.stigande())) {
-                    c = c.reversed();
-                }
-                cmp = cmp == null ? c : cmp.thenComparing(c);
-            }
-            list.sort(cmp);
-        }
-        if (behandling.paginering() != null) {
-            int from = Math.min(behandling.paginering().offset(), list.size());
-            int to = behandling.paginering().limit() == null ? list.size() : Math.min(from + behandling.paginering().limit(), list.size());
-            list = list.subList(from, to);
-        }
-        return list;
-    }
-
-    private static Comparator<Kundhandelse> comparator(String attribut) {
-        return switch (attribut) {
-            case "RUBRIK" -> Comparator.comparing(Kundhandelse::rubrik, String.CASE_INSENSITIVE_ORDER);
-            case "BESKRIVNING" -> Comparator.comparing(Kundhandelse::beskrivning, String.CASE_INSENSITIVE_ORDER);
-            case "PRODUCENT" -> Comparator.comparing(Kundhandelse::producent, String.CASE_INSENSITIVE_ORDER);
-            case "TIDPUNKT" -> Comparator.comparing(Kundhandelse::tidpunkt);
-            case "KUNDHANDELSETYP" -> Comparator.comparing(Kundhandelse::kundhandelseTyp);
-            case "PRODUCENTARENDETKRAVERKUNDATGARD" -> Comparator.comparing(Kundhandelse::producentarendetKraverKundatgard);
-            case "PRODUCENTARENDETKLART" -> Comparator.comparing(Kundhandelse::producentarendetKlart);
-            default -> throw new OgiltigFragaException("Okänt sorteringsattribut: " + attribut);
-        };
     }
 }

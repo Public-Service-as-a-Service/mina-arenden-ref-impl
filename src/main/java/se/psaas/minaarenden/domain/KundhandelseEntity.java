@@ -80,7 +80,7 @@ public class KundhandelseEntity {
     @Column(nullable = false)
     private Instant skapad;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "kundhandelse_tagg", joinColumns = @JoinColumn(name = "kundhandelse_ref"))
     @Column(name = "tagg", nullable = false, length = 100)
     private Set<String> taggar = new LinkedHashSet<>();

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -15,7 +16,11 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import se.psaas.minaarenden.api.dto.FragaRequest;
 import se.psaas.minaarenden.api.dto.FragaResponse;
+import se.psaas.minaarenden.api.dto.Granser;
+import se.psaas.minaarenden.config.CorrelationIdFilter;
+import se.psaas.minaarenden.config.OpenApiConfig;
 import se.psaas.minaarenden.service.FragaService;
+import se.psaas.minaarenden.service.OgiltigFragaException;
 
 /**
  * Producentens gränssnitt mot vidareförmedlingstjänsten. Samma operation, request och response som
@@ -23,6 +28,8 @@ import se.psaas.minaarenden.service.FragaService;
  */
 @RestController
 @Tag(name = "Kundhändelser", description = "Fråga om kundhändelser (Mina ärendens standard)")
+@SecurityRequirement(name = OpenApiConfig.CLIENT_ID)
+@SecurityRequirement(name = OpenApiConfig.CLIENT_SECRET)
 public class FragaController {
 
     private static final Logger log = LoggerFactory.getLogger(FragaController.class);
@@ -43,19 +50,21 @@ public class FragaController {
     @ApiResponse(responseCode = "401", description = "client_id eller client_secret saknas eller är fel")
     @PostMapping(value = "/kundhandelseFragaSynkron", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public FragaResponse fraga(
-            @Parameter(in = ParameterIn.HEADER, required = true, description = "Unikt id per anrop (UUID enligt RFC 4122)", example = "0002aa29-49f2-4baf-be51-c7c39c9824b4")
-            @RequestHeader("skv_client_correlation_id") String correlationId,
+            @Parameter(in = ParameterIn.HEADER, required = true,
+                    description = "Unikt id per anrop som följer anropskedjan från konsument via Skatteverket. Tjänstebeskrivningen "
+                            + "anger UUID enligt RFC 4122; API-definitionen tillåter valfritt format (icke-tom sträng), vilket är vad "
+                            + "som krävs här: skrivbara ASCII-tecken, högst " + Granser.MAX_CORRELATION_ID_LANGD + " tecken.",
+                    example = "0002aa29-49f2-4baf-be51-c7c39c9824b4")
+            @RequestHeader(CorrelationIdFilter.HEADER) String correlationId,
             @Parameter(in = ParameterIn.HEADER, description = "Önskat språk", example = "sv")
             @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage,
             @Valid @RequestBody FragaRequest request) {
-        if (correlationId.isBlank()) {
-            throw new se.psaas.minaarenden.service.OgiltigFragaException("skv_client_correlation_id får inte vara tom");
+        if (correlationId.isBlank() || !CorrelationIdFilter.TILLATET_FORMAT.matcher(correlationId).matches()) {
+            throw new OgiltigFragaException(CorrelationIdFilter.HEADER + " måste vara en icke-tom sträng med högst "
+                    + Granser.MAX_CORRELATION_ID_LANGD + " skrivbara tecken");
         }
-        log.info("Fråga {} från användare {} om {} part(er)", correlationId, mask(request.anvandare()), request.fraga().parter().size());
+        // Personnummer (anvandare) loggas inte, inte heller delvis; correlation-id ligger i MDC via CorrelationIdFilter.
+        log.info("Fråga om {} part(er)", request.fraga().parter().size());
         return service.besvara(request, acceptLanguage);
-    }
-
-    private static String mask(String personnummer) {
-        return personnummer == null || personnummer.length() < 8 ? "?" : personnummer.substring(0, 8) + "****";
     }
 }
