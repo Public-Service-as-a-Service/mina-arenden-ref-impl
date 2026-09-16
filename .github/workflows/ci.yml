@@ -15,7 +15,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Bygg och kör tester
         run: ./gradlew --no-daemon build
       - name: Spara testrapporter
