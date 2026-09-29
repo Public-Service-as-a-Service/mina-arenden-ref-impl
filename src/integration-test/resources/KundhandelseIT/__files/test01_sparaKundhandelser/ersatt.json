@@ -1,0 +1,28 @@
+{
+	"part": {
+		"kund": {
+			"identifierare": "199009090000",
+			"typ": "Personnummer"
+		},
+		"arende": {
+			"identifierare": "BYGG-2026-00123",
+			"typ": "Diarienummer"
+		}
+	},
+	"kundhandelse": {
+		"kundhandelseId": "TESTKOP-BYGG-2026-00123-1",
+		"rubrik": "Ansökan om bygglov mottagen (rättad)",
+		"beskrivning": "Vi har tagit emot din ansökan om bygglov för garage.",
+		"sprak": "sv",
+		"producent": "Testköpings kommun",
+		"tidpunkt": "2026-08-20T09:12:00+02:00",
+		"kundhandelseTyp": "TESTKOP.BYGGLOV.ANSOKAN_MOTTAGEN",
+		"producentarendetKraverKundatgard": false,
+		"producentarendetKlart": false,
+		"version": "6.1"
+	},
+	"taggar": [
+		"bygglov",
+		"garage"
+	]
+}

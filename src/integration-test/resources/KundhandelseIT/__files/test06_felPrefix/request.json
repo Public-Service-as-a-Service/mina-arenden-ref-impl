@@ -1,0 +1,17 @@
+[
+	{
+		"kundhandelseId": "TIMRA-BYGG-2026-00001-2",
+		"part": {
+			"arende": {
+				"identifierare": "BYGG-2026-00001",
+				"typ": "Diarienummer"
+			}
+		},
+		"rubrik": "Beslut om bygglov",
+		"beskrivning": "Bygglov har beviljats.",
+		"tidpunkt": "2026-09-20T10:00:00+02:00",
+		"kundhandelseTyp": "TIMRA.BYGGLOV.BESLUT",
+		"producentarendetKraverKundatgard": false,
+		"producentarendetKlart": true
+	}
+]

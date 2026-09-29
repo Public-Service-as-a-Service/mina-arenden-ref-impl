@@ -1,0 +1,34 @@
+{
+	"part": {
+		"kund": {
+			"identifierare": "199009090000",
+			"typ": "Personnummer"
+		},
+		"arende": {
+			"identifierare": "BYGG-2026-00123",
+			"typ": "Diarienummer"
+		}
+	},
+	"kundhandelse": {
+		"kundhandelseId": "TESTKOP-BYGG-2026-00123-2",
+		"rubrik": "Ansökan behöver kompletteras",
+		"beskrivning": "Situationsplan saknas.",
+		"sprak": "sv",
+		"producent": "Testköpings kommun",
+		"tidpunkt": "2026-09-02T14:30:00+02:00",
+		"kundhandelseTyp": "TESTKOP.BYGGLOV.KOMPLETTERING_BEGARD",
+		"producentarendetKraverKundatgard": true,
+		"producentarendetKlart": false,
+		"version": "6.1",
+		"utokadInformation": {
+			"senastDatum": "2026-09-30",
+			"saknadeHandlingar": [
+				"Situationsplan"
+			]
+		}
+	},
+	"taggar": [
+		"bygglov",
+		"kundatgard"
+	]
+}

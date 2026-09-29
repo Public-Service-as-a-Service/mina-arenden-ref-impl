@@ -1,0 +1,5 @@
+{
+	"status": 400,
+	"title": "Bad Request",
+	"detail": "kundhandelseTyp måste börja med producentprefixet TESTKOP. (TIMRA-BYGG-2026-00001-2)"
+}

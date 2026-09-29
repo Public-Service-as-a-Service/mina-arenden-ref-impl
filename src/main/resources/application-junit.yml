@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:mariadb:11.4:///minaarenden
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        hbm2ddl:
+          schema-generation:
+            script:
+              append: false
+      jakarta:
+        persistence:
+          schema-generation:
+            create-source: metadata
+            database:
+              action: validate
+            scripts:
+              action: create
+              create-target: target/database/generated-schema.sql
+security:
+  api-key:
+    fraga-keys: junit-fraga-nyckel-0123456789abcdef0123456789
+    admin-keys: junit-admin-nyckel-0123456789abcdef0123456789
+minaarenden:
+  standard-version: '6.1'
+  seed: false
+  producenter:
+    - municipality-id: '2281'
+      namn: Testköpings kommun
+      prefix: TESTKOP
+    - municipality-id: '2262'
+      namn: Timrå kommun
+      prefix: TIMRA

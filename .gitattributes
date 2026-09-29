@@ -1,0 +1,2 @@
+# Skript som körs i Linux-containrar måste ha LF-radslut
+*.sh text eol=lf
