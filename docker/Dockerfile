@@ -2,7 +2,7 @@
 # Testerna körs i CI (.github/workflows), inte här.
 
 # Steg 1: bygg med Maven
-FROM maven:3.9-eclipse-temurin-25 AS build
+FROM maven:3-eclipse-temurin-26 AS build
 WORKDIR /build
 COPY pom.xml ./
 # Beroenden i ett eget lager, så att de bara laddas ner igen när pom.xml ändras.
