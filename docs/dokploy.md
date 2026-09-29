@@ -56,6 +56,22 @@ Vid varje deploy startar tjänsterna i ordningen `db` → `db-prepare` (engångs
    curl -H "X-API-Key: <admin-nyckel>" https://mina-arenden.exempel.se/2281/kundhandelser
    # {"antal": 0}
    ```
+
+   I PowerShell (Windows):
+
+   ```powershell
+   Invoke-RestMethod https://mina-arenden.exempel.se/actuator/health
+   Invoke-RestMethod https://mina-arenden.exempel.se/2281/kundhandelser -Headers @{ "X-API-Key" = "<admin-nyckel>" }
+   ```
+
+   Byt `2281` mot det `MINA_ARENDEN_MUNICIPALITY_ID` som är satt. Startsidan `/` är Swagger UI och kräver ingen
+   nyckel, så den kan inte användas för att testa nyckeln.
+
+   > **PowerShell:** där är `curl` ett alias för `Invoke-WebRequest`, som inte förstår curl-flaggor som `-H` och ger
+   > felet *Cannot bind parameter 'Headers'*. Använd `Invoke-RestMethod` som ovan, eller skriv `curl.exe` för att köra
+   > riktiga curl (följer med Windows 10 och 11). Med `curl.exe` fungerar exemplen i den här guiden oförändrade, utom att
+   > JSON i `-d` behöver andra citattecken; använd därför PowerShell-exemplen när en request har body.
+
 5. **Automatisk deploy (valfritt).** Slå på *Autodeploy* i fliken *General* så deployas varje push till `main`.
    Tjänsten har inget eget webbgränssnitt utöver Swagger UI på `/`.
 
@@ -75,6 +91,12 @@ Alla anrop kräver headern `X-API-Key`, utom `/actuator/health`, `/actuator/info
 
    ```bash
    openssl rand -hex 32
+   ```
+
+   I PowerShell (Windows PowerShell 5.1 och PowerShell 7), med kryptografiskt säker slump:
+
+   ```powershell
+   $b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); -join ($b | ForEach-Object { $_.ToString("x2") })
    ```
 
    En nyckel ska vara minst 32 tecken utan mellanslag. `openssl rand -hex 32` ger 64 tecken.
@@ -103,6 +125,22 @@ Alla anrop kräver headern `X-API-Key`, utom `/actuator/health`, `/actuator/info
      -H 'skv_client_correlation_id: 0002aa29-49f2-4baf-be51-c7c39c9824b4' \
      -d '{"fraga":{"parter":[{"kund":{"identifierare":"199009090000","typ":"Personnummer"}}]},"anvandare":"199009090000"}'
    ```
+
+   I PowerShell:
+
+   ```powershell
+   $body = @{
+     fraga     = @{ parter = @(@{ kund = @{ identifierare = "199009090000"; typ = "Personnummer" } }) }
+     anvandare = "199009090000"
+   } | ConvertTo-Json -Depth 10
+
+   Invoke-RestMethod -Method Post -Uri https://mina-arenden.exempel.se/2281/kundhandelseFragaSynkron `
+     -Headers @{ "X-API-Key" = "<fråge-nyckel>"; "skv_client_correlation_id" = "0002aa29-49f2-4baf-be51-c7c39c9824b4" } `
+     -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes($body))
+   ```
+
+   `-Body` skickas som UTF-8-bytes så att å, ä och ö i rubriker och beskrivningar kommer fram rätt även i Windows
+   PowerShell 5.1. Vid fel kastar `Invoke-RestMethod` ett undantag; statuskoden syns i felmeddelandet.
 
    Utan eller med fel nyckel blir svaret `401`; en fråge-nyckel mot `/kundhandelser` ger `403`.
 
