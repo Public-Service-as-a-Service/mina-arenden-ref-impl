@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: gradle
+  - package-ecosystem: maven
     directory: /
     schedule:
       interval: weekly
@@ -9,6 +9,12 @@ updates:
     schedule:
       interval: weekly
   - package-ecosystem: docker
+    directories:
+      - /docker
+      - /docker/db-prepare
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: weekly

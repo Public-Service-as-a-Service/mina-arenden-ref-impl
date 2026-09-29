@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:mariadb:11.4:///minaarenden
+security:
+  api-key:
+    fraga-keys: it-fraga-nyckel-0123456789abcdef0123456789abcdef
+    admin-keys: it-admin-nyckel-0123456789abcdef0123456789abcdef
+minaarenden:
+  standard-version: '6.1'
+  seed: false
+  producenter:
+    - municipality-id: '2281'
+      namn: Testköpings kommun
+      prefix: TESTKOP
+    - municipality-id: '2262'
+      namn: Timrå kommun
+      prefix: TIMRA

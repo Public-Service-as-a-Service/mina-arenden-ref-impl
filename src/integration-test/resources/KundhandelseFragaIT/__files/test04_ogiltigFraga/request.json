@@ -1,0 +1,18 @@
+{
+	"fraga": {
+		"parter": [
+			{
+				"kund": {
+					"identifierare": "199009090000",
+					"typ": "Personnummer"
+				}
+			}
+		],
+		"behandling": {
+			"paginering": {
+				"offset": 0
+			}
+		}
+	},
+	"anvandare": "199009090000"
+}

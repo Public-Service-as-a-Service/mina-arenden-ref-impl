@@ -1,0 +1,84 @@
+{
+	"kundhandelser": [
+		{
+			"part": {
+				"kund": {
+					"identifierare": "199009090000",
+					"typ": "Personnummer"
+				}
+			},
+			"totaltAntalKundhandelser": 3,
+			"kundhandelserForPart": [
+				{
+					"kundhandelseId": "TESTKOP-FSK-2026-00777-1",
+					"rubrik": "Plats i förskola erbjuden",
+					"beskrivning": "Ditt barn har erbjudits plats i förskola.",
+					"sprak": "sv",
+					"producent": "Testköpings kommun",
+					"tidpunkt": "2026-09-10T07:30:00+02:00",
+					"kundhandelseTyp": "TESTKOP.FORSKOLA.PLATS_ERBJUDEN",
+					"producentarendetKraverKundatgard": true,
+					"producentarendetKlart": false,
+					"version": "6.1"
+				},
+				{
+					"kundhandelseId": "TESTKOP-BYGG-2026-00123-2",
+					"rubrik": "Ansökan behöver kompletteras",
+					"beskrivning": "Situationsplan saknas.",
+					"sprak": "sv",
+					"producent": "Testköpings kommun",
+					"tidpunkt": "2026-09-02T14:30:00+02:00",
+					"kundhandelseTyp": "TESTKOP.BYGGLOV.KOMPLETTERING_BEGARD",
+					"producentarendetKraverKundatgard": true,
+					"producentarendetKlart": false,
+					"version": "6.1",
+					"utokadInformation": {
+						"senastDatum": "2026-09-30",
+						"saknadeHandlingar": [
+							"Situationsplan"
+						]
+					}
+				},
+				{
+					"kundhandelseId": "TESTKOP-BYGG-2026-00123-1",
+					"rubrik": "Ansökan om bygglov mottagen",
+					"beskrivning": "Vi har tagit emot din ansökan om bygglov.",
+					"sprak": "sv",
+					"producent": "Testköpings kommun",
+					"tidpunkt": "2026-08-20T09:12:00+02:00",
+					"kundhandelseTyp": "TESTKOP.BYGGLOV.ANSOKAN_MOTTAGEN",
+					"producentarendetKraverKundatgard": false,
+					"producentarendetKlart": false,
+					"version": "6.1",
+					"referenser": {
+						"diarienummer": "BYGG-2026-00123"
+					}
+				}
+			]
+		}
+	],
+	"metadata": {
+		"parter": [
+			{
+				"kund": {
+					"identifierare": "199009090000",
+					"typ": "Personnummer"
+				}
+			}
+		],
+		"onskatSprak": "sv"
+	},
+	"delfragor": [
+		{
+			"producent": "Testköpings kommun",
+			"part": {
+				"kund": {
+					"identifierare": "199009090000",
+					"typ": "Personnummer"
+				}
+			},
+			"status": "OK",
+			"httpCode": 200
+		}
+	]
+}

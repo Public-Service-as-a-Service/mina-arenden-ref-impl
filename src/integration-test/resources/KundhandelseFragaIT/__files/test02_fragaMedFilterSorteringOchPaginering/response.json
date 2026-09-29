@@ -1,0 +1,113 @@
+{
+	"kundhandelser": [
+		{
+			"part": {
+				"kund": {
+					"identifierare": "199009090000",
+					"typ": "Personnummer"
+				},
+				"arende": {
+					"identifierare": "BYGG-2026-00123",
+					"typ": "Diarienummer"
+				}
+			},
+			"totaltAntalKundhandelser": 2,
+			"kundhandelserForPart": [
+				{
+					"kundhandelseId": "TESTKOP-BYGG-2026-00123-2",
+					"rubrik": "Ansökan behöver kompletteras",
+					"beskrivning": "Situationsplan saknas.",
+					"sprak": "sv",
+					"producent": "Testköpings kommun",
+					"tidpunkt": "2026-09-02T14:30:00+02:00",
+					"kundhandelseTyp": "TESTKOP.BYGGLOV.KOMPLETTERING_BEGARD",
+					"producentarendetKraverKundatgard": true,
+					"producentarendetKlart": false,
+					"version": "6.1",
+					"utokadInformation": {
+						"senastDatum": "2026-09-30",
+						"saknadeHandlingar": [
+							"Situationsplan"
+						]
+					}
+				}
+			]
+		},
+		{
+			"part": {
+				"kund": {
+					"identifierare": "165560001234",
+					"typ": "Organisationsnummer"
+				}
+			},
+			"totaltAntalKundhandelser": 1,
+			"kundhandelserForPart": []
+		}
+	],
+	"metadata": {
+		"parter": [
+			{
+				"kund": {
+					"identifierare": "199009090000",
+					"typ": "Personnummer"
+				},
+				"arende": {
+					"identifierare": "BYGG-2026-00123",
+					"typ": "Diarienummer"
+				}
+			},
+			{
+				"kund": {
+					"identifierare": "165560001234",
+					"typ": "Organisationsnummer"
+				}
+			}
+		],
+		"kundhandelseTyper": [
+			"TESTKOP.BYGGLOV",
+			"TESTKOP.SERVERINGSTILLSTAND.BESLUT"
+		],
+		"startDatum": "2026-08-01",
+		"slutDatum": "2026-09-30",
+		"behandling": {
+			"sortering": [
+				{
+					"attribut": "TIDPUNKT",
+					"stigande": true
+				}
+			],
+			"paginering": {
+				"offset": 1,
+				"limit": 1
+			}
+		}
+	},
+	"delfragor": [
+		{
+			"producent": "Testköpings kommun",
+			"part": {
+				"kund": {
+					"identifierare": "199009090000",
+					"typ": "Personnummer"
+				},
+				"arende": {
+					"identifierare": "BYGG-2026-00123",
+					"typ": "Diarienummer"
+				}
+			},
+			"status": "OK",
+			"httpCode": 200
+		},
+		{
+			"producent": "Testköpings kommun",
+			"part": {
+				"kund": {
+					"identifierare": "165560001234",
+					"typ": "Organisationsnummer"
+				}
+			},
+			"status": "OK",
+			"httpCode": 200
+		}
+	]
+}
