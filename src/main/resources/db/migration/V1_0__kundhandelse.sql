@@ -1,8 +1,9 @@
--- Ärendecache: kundhändelser enligt Mina ärendens standard, med den part
+-- Ärendecache: kundhändelser enligt Mina ärendens standard, per kommun och med den part
 -- (kund och/eller ärende) som händelsen gäller. Kolumnnamnen följer API-specifikationen.
 
 CREATE TABLE kundhandelse (
-    id                                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id                                  VARCHAR(255)  NOT NULL PRIMARY KEY,
+    municipality_id                     VARCHAR(4)    NOT NULL,
     kundhandelse_id                     VARCHAR(100)  NOT NULL,
     producent                           VARCHAR(200)  NOT NULL,
     kund_identifierare                  VARCHAR(12),
@@ -21,17 +22,21 @@ CREATE TABLE kundhandelse (
     utokad_information                  TEXT,
     referenser                          TEXT,
     skapad                              DATETIME(3)   NOT NULL,
-    CONSTRAINT uq_kundhandelse_id UNIQUE (kundhandelse_id)
+    -- Tidpunkt för senaste ersättning via POST /{municipalityId}/kundhandelser.
+    andrad                              DATETIME(3),
+    -- kundhandelseId är unikt per kommun.
+    CONSTRAINT uq_kundhandelse_municipality_id_kundhandelse_id UNIQUE (municipality_id, kundhandelse_id)
 );
 
-CREATE INDEX ix_kundhandelse_kund    ON kundhandelse (kund_identifierare, kund_typ);
-CREATE INDEX ix_kundhandelse_arende  ON kundhandelse (arende_identifierare, arende_typ);
+-- Frågor filtrerar alltid på kommun först.
+CREATE INDEX ix_kundhandelse_kund     ON kundhandelse (municipality_id, kund_identifierare, kund_typ);
+CREATE INDEX ix_kundhandelse_arende   ON kundhandelse (municipality_id, arende_identifierare, arende_typ);
 CREATE INDEX ix_kundhandelse_tidpunkt ON kundhandelse (tidpunkt);
-CREATE INDEX ix_kundhandelse_typ     ON kundhandelse (kundhandelse_typ);
+CREATE INDEX ix_kundhandelse_typ      ON kundhandelse (kundhandelse_typ);
 
 -- Taggar som pekar ut producentärendetyper eller kundhändelsetyper (fraga.taggar).
 CREATE TABLE kundhandelse_tagg (
-    kundhandelse_ref  BIGINT       NOT NULL,
+    kundhandelse_ref  VARCHAR(255) NOT NULL,
     tagg              VARCHAR(100) NOT NULL,
     PRIMARY KEY (kundhandelse_ref, tagg),
     CONSTRAINT fk_tagg_kundhandelse FOREIGN KEY (kundhandelse_ref) REFERENCES kundhandelse (id) ON DELETE CASCADE

@@ -6,8 +6,6 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -22,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import org.hibernate.annotations.UuidGenerator;
 import se.sundsvall.dept44.util.PiiMasker;
 
 import static org.hibernate.Length.LONG16;
@@ -47,9 +46,9 @@ public class KundhandelseEntity implements Serializable {
 	private static final long serialVersionUID = 4034813525227427812L;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	private Long id;
+	@UuidGenerator
+	@Column(name = "id", nullable = false, length = 255)
+	private String id;
 
 	@Column(name = "municipality_id", nullable = false, length = 4)
 	private String municipalityId;
@@ -133,15 +132,15 @@ public class KundhandelseEntity implements Serializable {
 		andrad = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(final Long id) {
+	public void setId(final String id) {
 		this.id = id;
 	}
 
-	public KundhandelseEntity withId(final Long id) {
+	public KundhandelseEntity withId(final String id) {
 		this.id = id;
 		return this;
 	}
